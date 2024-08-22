@@ -1,0 +1,2 @@
+from models.teacher.models import Teacher,Group,GroupTime,Student,Course,CourseToGroup,Homework,HomeworkAnswer,Exam,Quiz,Quiz_answers,Quiz_Student_answers,Exam_result
+from models.teacher.schemas import CreateTeacherBase,Disactive_teacher,Group_Base,GroupTime_Base,Student_Base,Course_Base,Course_Group,Homework_Base,Homework_answer_Base,Homework_update_Base,Exam_Base,Homework_teacher_answer_Base,Exam_update_Base,Quiz_Base,Quiz_answer_Base,Update_Quiz_answer_Base,Quiz_student_answer_Base

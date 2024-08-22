@@ -1,0 +1,1 @@
+from crud.teacher.auth_teacher import create_techer_crud,teacher_login,read_all_teacher,read_region_teacher,read_teacher,read_region_teacher,update_teacher,disactive_teacheres,read_disactive_teacher,check_teacher_token
