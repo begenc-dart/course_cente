@@ -63,6 +63,7 @@ class Student(Base):
     quiz_student_answers = relationship('Quiz_Student_answers', back_populates='student')
     homework_answers = relationship('HomeworkAnswer', back_populates='student')
     exams = relationship('Exam_result', back_populates='student')
+    question_answer = relationship('Question_answer_Student', back_populates='student')
 
 class GroupTime(Base):
     __tablename__ = 'group_times'
@@ -151,12 +152,13 @@ class Exam(Base):
     course = relationship('Course', back_populates='exam')
     quiz = relationship('Quiz', back_populates='exams')
     exam_result = relationship('Exam_result', back_populates='exams')
+    question = relationship('Question', back_populates='exams')
 class Quiz(Base):
     __tablename__="quiz"
     id = Column(Integer, primary_key=True, index=True)
     quiz=Column(String)
     exam_id = Column(Integer, ForeignKey('exam.id', ondelete='CASCADE'))
-    point=Column(Integer)
+    point=Column(Integer,default=0)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     exams = relationship('Exam', back_populates='quiz')
@@ -188,11 +190,30 @@ class Exam_result(Base):
     id = Column(Integer, primary_key=True, index=True)
     point=Column(Integer,default=0)
     created_at = Column(DateTime, default=func.now())
+    
     student_id=Column(Integer, ForeignKey('students.id', ondelete='CASCADE'))
     exam_id = Column(Integer, ForeignKey('exam.id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     student = relationship('Student', back_populates='exams')
     exams = relationship('Exam', back_populates='exam_result')
-# class Question(Base):
-#     __tablename__="question"
-#     id=Column(Integer)
+class Question(Base):
+    __tablename__="question"
+    id = Column(Integer, primary_key=True, index=True)
+    question=Column(String)
+    point=Column(Integer,default=0)
+    exam_id = Column(Integer, ForeignKey('exam.id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    exams = relationship('Exam', back_populates='question')
+    question_answer = relationship('Question_answer_Student', back_populates='question')
+class Question_answer_Student(Base):
+    __tablename__="question_answer"
+    id = Column(Integer, primary_key=True, index=True)
+    answer=Column(String)
+    student_id = Column(Integer, ForeignKey('students.id', ondelete='CASCADE'))
+    question_id = Column(Integer, ForeignKey('question.id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    question = relationship('Question', back_populates='question_answer')
+    student = relationship('Student', back_populates='question_answer')

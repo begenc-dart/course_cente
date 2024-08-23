@@ -79,5 +79,13 @@ class Update_Quiz_answer_Base(BaseModel):
 class Quiz_student_answer_Base(BaseModel):
     quiz_id:int
     quiz_answer_id:int
-    
-    
+class Question_Base(BaseModel):
+    question:str
+    point:int
+    exam_id:int
+class Question_update_Base(BaseModel):
+    question:str
+    point:int
+class Question_answer_student_Base(BaseModel):
+    answer:str
+    question_id:int

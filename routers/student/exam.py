@@ -34,6 +34,20 @@ async def get_exam(course_id:int,header_param: Request,db: Session = Depends(get
         return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Doesn't have exam this id")
     if result:
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+#--------------------------------------------------------------------------------------
+@exam.get('/api/get_exam_by_id/{exam_id}', dependencies=[Depends(HTTPBearer())])
+async def get_exam(exam_id:int,header_param: Request,db: Session = Depends(get_db)):
+    result = await auth.read_exam_by_id(header_param=header_param, db=db,exam_id=exam_id)
+    result = jsonable_encoder(result)
+    print(result)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    elif result==-2:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="You dont have exam")
+    elif result == None:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Doesn't have exam this id")
+    if result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
 #----------------------------------------------------------------------------------
 #update exam
 @exam.put('/api/update_exam/{id}', dependencies=[Depends(HTTPBearer())])
@@ -189,6 +203,82 @@ async def create_quiz_answer(header_param: Request,req: mod.Quiz_student_answer_
 @exam.get('/api/get_all_result/{quiz_id}', dependencies=[Depends(HTTPBearer())])
 async def get_quiz(quiz_id:int, header_param: Request,db: Session = Depends(get_db)):
     result = await auth.read_all_result(header_param=header_param, db=db,exam_id=quiz_id)
+    result = jsonable_encoder(result)
+    print(result)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    elif result==-2:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="You dont have exam")
+    elif result == None:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Doesn't have exam this id")
+    if result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+#---------------------------------------------------------------------------------------
+@exam.post("/api/add_question", dependencies=[Depends(HTTPBearer())])
+async def create_question(header_param: Request,req: mod.Question_Base,db: Session = Depends(get_db),):
+    result = await auth.create_question(header_param=header_param,req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+#--------------------------------------------------------------------------------------
+@exam.get('/api/get_all_question/{exam_id}', dependencies=[Depends(HTTPBearer())])
+async def get_exam(exam_id:int,header_param: Request,db: Session = Depends(get_db)):
+    result = await auth.read_question(header_param=header_param, db=db,exam_id=exam_id)
+    result = jsonable_encoder(result)
+    print(result)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    elif result==-2:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="You dont have exam")
+    elif result == None:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Doesn't have exam this id")
+    if result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+#----------------------------------------------------------------------------------
+#update quiz
+@exam.put('/api/update_question/{question_id}', dependencies=[Depends(HTTPBearer())])
+async def update_question(question_id: int, header_param: Request, req: mod.Question_update_Base, db: Session = Depends(get_db)):
+    result = await auth.update_question(id=question_id, header_param=header_param, req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        result = {'msg': 'Обновлено!'}
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+
+#------------------------------------------------------------------------------
+#delete exam
+@exam.delete('/api/delete_question/{question_id}', dependencies=[Depends(HTTPBearer())])
+async def delete_question( header_param: Request,question_id: int,db: Session = Depends(get_db)):
+    result = await auth.delete_question(id=question_id, header_param=header_param, db=db)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    if result:
+        result = jsonable_encoder(result)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+#---------------------------------------------------------------------------------------
+@exam.post("/api/add_question_answer_student", dependencies=[Depends(HTTPBearer())])
+async def create_question(header_param: Request,req: mod.Question_answer_student_Base,db: Session = Depends(get_db),):
+    result = await auth.create_question_answer_student(header_param=header_param,req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+#--------------------------------------------------------------------------------------
+@exam.get('/api/get_qestion_result/{exam_id}', dependencies=[Depends(HTTPBearer())])
+async def get_quiz(exam_id:int, header_param: Request,db: Session = Depends(get_db)):
+    result = await auth.read_question_by_id(header_param=header_param, db=db,exam_id=exam_id)
     result = jsonable_encoder(result)
     print(result)
     if result == -1:
