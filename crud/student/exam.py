@@ -1,9 +1,10 @@
 import models.teacher as mod
-import models.superuser as login
+
 from sqlalchemy.orm import Session, joinedload
 from fastapi import Request
 from sqlalchemy import and_, desc
 import crud.teacher.auth_teacher as super_admin
+import crud.superuser.auth as superadmin
 import crud.student.auth as student
 from fastapi.encoders import jsonable_encoder
 from tokens.token import check_token, create_access_token, decode_token
@@ -38,10 +39,11 @@ async def create_exam(header_param: Request, req: mod.Exam_Base, db: Session,):
 # exam get
 
 
-async def read_exam(course_id:int,header_param: Request,  db: Session):
+async def read_exam(course_id: int, header_param: Request,  db: Session):
     user = await student.check_student_token(header_param=header_param, db=db)
     teacher = await super_admin.check_teacher_token(header_param=header_param, db=db)
-    if not user and not teacher:
+    super = await superadmin.check_super_admin_token(header_param=header_param, db=db)
+    if not user and not teacher and not super:
         return -1
     result = (
         db.query(mod.Exam)
@@ -59,7 +61,7 @@ async def read_exam(course_id:int,header_param: Request,  db: Session):
 # exam get
 
 
-async def read_exam_by_id(exam_id:int,header_param: Request,  db: Session):
+async def read_exam_by_id(exam_id: int, header_param: Request,  db: Session):
     user = await student.check_student_token(header_param=header_param, db=db)
     teacher = await super_admin.check_teacher_token(header_param=header_param, db=db)
     if not user and not teacher:
@@ -68,7 +70,7 @@ async def read_exam_by_id(exam_id:int,header_param: Request,  db: Session):
         db.query(mod.Exam)
         .filter(
             and_(
-                mod.Exam.id==exam_id
+                mod.Exam.id == exam_id
 
             )
         ).options(joinedload(mod.Exam.question)).options(joinedload(mod.Exam.quiz).options(joinedload(mod.Quiz.quiz_answer)))
@@ -161,7 +163,7 @@ async def read_quiz(exam_id: int, header_param: Request,  db: Session):
         mod.CourseToGroup.group_id == user.group_id).first()
     if not course:
         return -2
-    
+
     resultes = []
     for i in result:
         quiz_answer = db.query(mod.Quiz_Student_answers).filter(and_(
@@ -277,7 +279,7 @@ async def read_quiz_answer(quiz_id: int, header_param: Request,  db: Session):
     )
     if teacher:
         return result
-    if not result :
+    if not result:
         return -2
     quiz_answer = db.query(mod.Quiz_Student_answers).filter(and_(
         mod.Quiz_Student_answers.quiz_id == result.id, mod.Quiz_Student_answers.student_id == user.id)).first()
@@ -343,11 +345,13 @@ async def create_quiz_student_answer(header_param: Request, req: mod.Quiz_studen
     quiz = db.query(mod.Quiz_answers).filter(and_(mod.Quiz_answers.id ==
                                                   req.quiz_answer_id, mod.Quiz_answers.quiz_id == req.quiz_id)).first()
     if quiz.is_true:
-        result=db.query(mod.Exam_result).filter(and_(mod.Exam_result.student_id==user.id)).first()
-        quiz=db.query(mod.Quiz).filter(and_(mod.Quiz.id==req.quiz_id)).first()
+        result = db.query(mod.Exam_result).filter(
+            and_(mod.Exam_result.student_id == user.id)).first()
+        quiz = db.query(mod.Quiz).filter(
+            and_(mod.Quiz.id == req.quiz_id)).first()
         if not result:
-            
-            exam_resu=mod.Exam_result(
+
+            exam_resu = mod.Exam_result(
                 point=quiz.point,
                 student_id=user.id,
                 exam_id=quiz.exam_id
@@ -357,11 +361,11 @@ async def create_quiz_student_answer(header_param: Request, req: mod.Quiz_studen
             db.refresh(exam_resu)
         else:
             req_json = jsonable_encoder({
-                "point":result.point+quiz.point
+                "point": result.point+quiz.point
             })
             user_exist = (
-            db.query(mod.Exam_result).filter(
-                and_(mod.Exam_result.student_id==user.id)).update(req_json, synchronize_session=False))
+                db.query(mod.Exam_result).filter(
+                    and_(mod.Exam_result.student_id == user.id)).update(req_json, synchronize_session=False))
             db.commit()
     if new_add:
         db.add(new_add)
@@ -393,7 +397,8 @@ async def read_all_result(exam_id: int, header_param: Request,  db: Session):
         .first()
     )
     return result
-#-------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------
+
 
 async def create_question(header_param: Request, req: mod.Question_Base, db: Session,):
     user = await super_admin.check_teacher_token(header_param=header_param, db=db)
@@ -417,7 +422,7 @@ async def create_question(header_param: Request, req: mod.Question_Base, db: Ses
 # question read
 
 
-async def read_question(exam_id:int,header_param: Request,  db: Session):
+async def read_question(exam_id: int, header_param: Request,  db: Session):
     user = await student.check_student_token(header_param=header_param, db=db)
     teacher = await super_admin.check_teacher_token(header_param=header_param, db=db)
     if not user and not teacher:
@@ -467,7 +472,8 @@ async def update_question(id, req: mod.Question_update_Base, header_param: Reque
         return True
     else:
         return None
-#-------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------
+
 
 async def create_question_answer_student(header_param: Request, req: mod.Question_answer_student_Base, db: Session,):
     user = await student.check_student_token(header_param=header_param, db=db)
@@ -502,17 +508,16 @@ async def read_question_by_id(exam_id: int, header_param: Request,  db: Session)
 
             )
         )
-        .all()
     )
     if teacher:
-        return result
+        return result.options(joinedload(mod.Question.question_answer).options(joinedload(mod.Question_answer_Student.student))).all()
     course = db.query(mod.CourseToGroup).filter(
         mod.CourseToGroup.group_id == user.group_id).first()
     if not course:
         return -2
-    
+
     resultes = []
-    for i in result:
+    for i in result.all():
         print(user.id)
         quiz_answer = db.query(mod.Question_answer_Student).filter(and_(
             mod.Question_answer_Student.question_id == i.id, mod.Question_answer_Student.student_id == user.id)).first()
@@ -523,3 +528,281 @@ async def read_question_by_id(exam_id: int, header_param: Request,  db: Session)
         })
 
     return resultes
+
+# --------------------------------------------------------------------------------
+
+
+async def update_visible_exam(visible: bool, header_param: Request, db: Session):
+    super_admin = await superadmin.check_super_admin_token(header_param=header_param, db=db)
+    if not super_admin:
+        return -1
+    req_json = jsonable_encoder({"see_result": visible})
+    user_exist = (
+        db.query(mod.Exam).update(req_json, synchronize_session=False)
+    )
+    db.commit()
+    if user_exist:
+        return True
+    else:
+        return None
+# --------------------------------------------------------------------------------------
+
+
+async def create_question_result(header_param: Request, req: mod.Question_result_Base, db: Session,):
+    teacher = await super_admin.check_teacher_token(header_param=header_param, db=db)
+    if not teacher:
+        return -1
+    answer = db.query(mod.Question_answer_Student).filter(
+        mod.Question_answer_Student.id == req.answer_id).first()
+    new_add = mod.Question_result(
+        comment=req.comment,
+        is_true=req.is_true,
+        answer_id=req.answer_id
+    )
+    if req.is_true:
+        result = db.query(mod.Exam_result).filter(
+            and_(mod.Exam_result.student_id == answer.student_id)).first()
+        question = db.query(mod.Question).filter(
+            and_(mod.Question.id == answer.question_id)).first()
+        if not result:
+
+            exam_resu = mod.Exam_result(
+                point=question.point,
+                student_id=answer.student_id,
+                exam_id=question.exam_id
+            )
+            db.add(exam_resu)
+            db.commit()
+            db.refresh(exam_resu)
+        else:
+            req_json = jsonable_encoder({
+                "point": result.point+question.point
+            })
+            user_exist = (
+                db.query(mod.Exam_result).filter(
+                    and_(mod.Exam_result.student_id == answer.student_id)).update(req_json, synchronize_session=False))
+            db.commit()
+
+    if new_add:
+        db.add(new_add)
+        db.commit()
+        db.refresh(new_add)
+
+        return new_add
+    else:
+        return None
+
+
+async def create_project_exam(header_param: Request, req: mod.Project_exam_Base, db: Session,):
+    user = await super_admin.check_teacher_token(header_param=header_param, db=db)
+    if not user:
+        return -1
+
+    new_add = mod.Project_exam(
+        comment=req.comment,
+        url_address=req.url_address,
+        point=req.point,
+        exam_id=req.exam_id,
+    )
+    if new_add:
+        db.add(new_add)
+        db.commit()
+        db.refresh(new_add)
+        return new_add
+    else:
+        return None
+# -----------------------------------------------------------------------------------------
+
+# question read
+
+
+async def read_project(exam_id: int, header_param: Request,  db: Session):
+    user = await student.check_student_token(header_param=header_param, db=db)
+    teacher = await super_admin.check_teacher_token(header_param=header_param, db=db)
+    if not user and not teacher:
+        return -1
+    result = (
+        db.query(mod.Project_exam)
+        .filter(
+            and_(
+                mod.Project_exam.exam_id == exam_id,
+
+            )
+        )
+        .all()
+    )
+    return result
+# ---------------------------------------------------------------------------------------
+
+
+async def delete_project_exam(id, header_param: Request, db: Session):
+    user = await super_admin.check_teacher_token(header_param, db)
+    if not user:
+        return -1
+
+    new_delete = (
+        db.query(mod.Project_exam).filter(
+            mod.Project_exam.id == id).delete(synchronize_session=False)
+    )
+    db.commit()
+    if new_delete:
+        result = {"msg": "Удалено!"}
+        return result
+
+# --------------------------------------------------------------------------------
+
+
+async def update_project_exam(id, req: mod.Project_exam_Base, header_param: Request, db: Session):
+    user = await super_admin.check_teacher_token(header_param=header_param, db=db)
+    if not user:
+        return -1
+    req_json = jsonable_encoder(req)
+    user_exist = (
+        db.query(mod.Project_exam).filter(
+            and_(mod.Project_exam.id == id)).update(req_json, synchronize_session=False)
+    )
+    db.commit()
+    if user_exist:
+        return True
+    else:
+        return None
+# ---------------------------------------------------------------
+
+
+async def post_project_exam(id, header_param, db: Session, file):
+    user = await super_admin.check_teacher_token(header_param=header_param, db=db)
+    if not user:
+        return -1
+    uploaded_img = upload.upload_image(directory="project_exam", file=file)
+    new_add = mod.Project_exam(img=uploaded_img)
+    if new_add:
+        req_json = jsonable_encoder(new_add)
+        new_update = (
+            db.query(mod.Project_exam)
+            .filter(mod.Project_exam.id == id)
+            .update(req_json, synchronize_session=False)
+        )
+        db.commit()
+
+        return new_add
+# -----------------------------------------------------------------------
+
+
+async def create_project_answer_student(header_param: Request, req: mod.Project_result_add, db: Session,):
+    user = await student.check_student_token(header_param=header_param, db=db)
+    if not user:
+        return -1
+    new_add = mod.Project_exam_result(
+        comment=req.comment,
+        url=req.url,
+        student_id=user.id,
+        project_id=req.project_id
+    )
+    if new_add:
+        db.add(new_add)
+        db.commit()
+        db.refresh(new_add)
+        return new_add
+    else:
+        return None
+# ---------------------------------------------------------------
+
+
+async def create_project_answer_student_img(id, header_param, db: Session, file):
+    user = await student.check_student_token(header_param=header_param, db=db)
+    if not user:
+        return -1
+    uploaded_img = upload.upload_image(directory="project_exam", file=file)
+    new_add = mod.Project_exam_result(img=uploaded_img)
+    if new_add:
+        req_json = jsonable_encoder(new_add)
+        new_update = (
+            db.query(mod.Project_exam_result)
+            .filter(mod.Project_exam_result.id == id)
+            .update(req_json, synchronize_session=False)
+        )
+        db.commit()
+
+        return new_add
+# --------------------------------------------------------------------
+
+
+async def read_project_by_id(exam_id: int, header_param: Request,  db: Session):
+    user = await student.check_student_token(header_param=header_param, db=db)
+    teacher = await super_admin.check_teacher_token(header_param=header_param, db=db)
+    if not user and not teacher:
+        return -1
+    result = (
+        db.query(mod.Project_exam)
+        .filter(
+            and_(
+                mod.Project_exam.exam_id == exam_id,
+
+            )
+        )
+    )
+    if teacher:
+        return result.options(joinedload(mod.Project_exam.project_result).options(joinedload(mod.Project_exam_result.student))).all()
+    course = db.query(mod.CourseToGroup).filter(
+        mod.CourseToGroup.group_id == user.group_id).first()
+    if not course:
+        return -2
+
+    resultes = []
+    for i in result.all():
+        print(user.id)
+        quiz_answer = db.query(mod.Project_exam_result).filter(and_(
+            mod.Project_exam_result.project_id == i.id, mod.Project_exam_result.student_id == user.id)).first()
+
+        resultes.append({
+            "question_answer_by_student": quiz_answer,
+            "question": i
+        })
+
+    return resultes
+# --------------------------------------------------------------------------------------
+
+
+async def create_project_results(header_param: Request, req: mod.Question_result_Base, db: Session,):
+    teacher = await super_admin.check_teacher_token(header_param=header_param, db=db)
+    if not teacher:
+        return -1
+    answer = db.query(mod.Project_exam_result).filter(
+        mod.Project_exam_result.id == req.answer_id).first()
+    new_add = mod.Project_Teacher_result(
+        comment=req.comment,
+        is_true=req.is_true,
+        answer_id=req.answer_id
+    )
+    if req.is_true:
+        result = db.query(mod.Exam_result).filter(
+            and_(mod.Exam_result.student_id == answer.student_id)).first()
+        question = db.query(mod.Project_exam).filter(
+            and_(mod.Project_exam.id == answer.project_id)).first()
+        if not result:
+
+            exam_resu = mod.Exam_result(
+                point=question.point,
+                student_id=answer.student_id,
+                exam_id=question.exam_id
+            )
+            db.add(exam_resu)
+            db.commit()
+            db.refresh(exam_resu)
+        else:
+            req_json = jsonable_encoder({
+                "point": result.point+question.point
+            })
+            user_exist = (
+                db.query(mod.Exam_result).filter(
+                    and_(mod.Exam_result.student_id == answer.student_id)).update(req_json, synchronize_session=False))
+            db.commit()
+
+    if new_add:
+        db.add(new_add)
+        db.commit()
+        db.refresh(new_add)
+
+        return new_add
+    else:
+        return None

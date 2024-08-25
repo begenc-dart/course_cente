@@ -176,7 +176,6 @@ async def delete_homework(id, header_param: Request, db: Session):
     if new_delete:
         result = {"msg": "Удалено!"}
         return result
-#----------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
 async def update_homework(id, req: mod.Homework_update_Base, header_param: Request, db: Session):

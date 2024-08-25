@@ -289,3 +289,136 @@ async def get_quiz(exam_id:int, header_param: Request,db: Session = Depends(get_
         return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Doesn't have exam this id")
     if result:
         return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+#-----------------------------------------------------------------------------------
+
+@exam.put('/api/visible_exam_result/{visible}', dependencies=[Depends(HTTPBearer())])
+async def update_exam(visible: bool, header_param: Request,  db: Session = Depends(get_db)):
+    result = await auth.update_visible_exam(visible=visible, header_param=header_param, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        result = {'msg': 'Обновлено!'}
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+#---------------------------------------------------------------------------------------
+@exam.post("/api/question_result", dependencies=[Depends(HTTPBearer())])
+async def create_question(header_param: Request,req: mod.Question_result_Base,db: Session = Depends(get_db),):
+    result = await auth.create_question_result(header_param=header_param,req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+#---------------------------------------------------------------------------------------
+@exam.post("/api/add_project_exam", dependencies=[Depends(HTTPBearer())])
+async def create_project_exam(header_param: Request,req: mod.Project_exam_Base,db: Session = Depends(get_db)):
+    result = await auth.create_project_exam(header_param=header_param,req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+# ---------------------------------------------------------------------------------------
+@exam.post('/api/create-project_exam_img/{project_id}', dependencies=[Depends(HTTPBearer())])
+async def create_video(project_id: int, header_param: Request, db: Session = Depends(get_db), file: UploadFile = File(...)):
+    result = await auth.post_project_exam(project_id, header_param, db, file)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    if result:
+        result = jsonable_encoder(result)
+        return JSONResponse(content=result, status_code=status.HTTP_201_CREATED)
+    else:
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+#--------------------------------------------------------------------------------------
+@exam.get('/api/get_all_project/{exam_id}', dependencies=[Depends(HTTPBearer())])
+async def get_exam(exam_id:int,header_param: Request,db: Session = Depends(get_db)):
+    result = await auth.read_project(header_param=header_param, db=db,exam_id=exam_id)
+    result = jsonable_encoder(result)
+    print(result)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    elif result==-2:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="You dont have exam")
+    elif result == None:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Doesn't have exam this id")
+    if result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+#----------------------------------------------------------------------------------
+#update quiz
+@exam.put('/api/update_project_exam/{question_id}', dependencies=[Depends(HTTPBearer())])
+async def update_question(question_id: int, header_param: Request, req: mod.Project_exam_Base, db: Session = Depends(get_db)):
+    result = await auth.update_project_exam(id=question_id, header_param=header_param, req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        result = {'msg': 'Обновлено!'}
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+
+#------------------------------------------------------------------------------
+#delete exam
+@exam.delete('/api/delete_project_exam/{question_id}', dependencies=[Depends(HTTPBearer())])
+async def delete_question( header_param: Request,question_id: int,db: Session = Depends(get_db)):
+    result = await auth.delete_project_exam(id=question_id, header_param=header_param, db=db)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    if result:
+        result = jsonable_encoder(result)
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+#---------------------------------------------------------------------------------------
+@exam.post("/api/add_project_exam_result_student", dependencies=[Depends(HTTPBearer())])
+async def create_question(header_param: Request,req: mod.Project_result_add,db: Session = Depends(get_db),):
+    result = await auth.create_project_answer_student(header_param=header_param,req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+# ---------------------------------------------------------------------------------------
+@exam.post('/api/add_project_exam_result_student_img/{answer_id}', dependencies=[Depends(HTTPBearer())])
+async def create_video(answer_id: int, header_param: Request, db: Session = Depends(get_db), file: UploadFile = File(...)):
+    result = await auth.create_project_answer_student_img(answer_id, header_param, db, file)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    if result:
+        result = jsonable_encoder(result)
+        return JSONResponse(content=result, status_code=status.HTTP_201_CREATED)
+    else:
+        return HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+#--------------------------------------------------------------------------------------
+@exam.get('/api/get_project_result/{exam_id}', dependencies=[Depends(HTTPBearer())])
+async def get_quiz(exam_id:int, header_param: Request,db: Session = Depends(get_db)):
+    result = await auth.read_project_by_id(header_param=header_param, db=db,exam_id=exam_id)
+    result = jsonable_encoder(result)
+    print(result)
+    if result == -1:
+        return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    elif result==-2:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="You dont have exam")
+    elif result == None:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Doesn't have exam this id")
+    if result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+#---------------------------------------------------------------------------------------
+@exam.post("/api/project_result", dependencies=[Depends(HTTPBearer())])
+async def create_question(header_param: Request,req: mod.Question_result_Base,db: Session = Depends(get_db),):
+    result = await auth.create_project_results(header_param=header_param,req=req, db=db)
+    result = jsonable_encoder(result)
+    if result == -1:
+        return HTTPException(status_code = status.HTTP_401_UNAUTHORIZED)
+    elif result:
+        return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+    else:
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST)

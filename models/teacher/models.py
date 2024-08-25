@@ -21,6 +21,7 @@ class Teacher(Base):
     # Define the relationships
     groups = relationship('Group', back_populates='teacher')
     courses = relationship('Course', back_populates='teacher')
+    lesson_comments = relationship('Lesson_comment', back_populates='teacher')
 
 class Group(Base):
     __tablename__ = 'groups'
@@ -64,6 +65,8 @@ class Student(Base):
     homework_answers = relationship('HomeworkAnswer', back_populates='student')
     exams = relationship('Exam_result', back_populates='student')
     question_answer = relationship('Question_answer_Student', back_populates='student')
+    project = relationship('Project_exam_result', back_populates='student')
+    lesson_comments = relationship('Lesson_comment', back_populates='student')
 
 class GroupTime(Base):
     __tablename__ = 'group_times'
@@ -91,6 +94,7 @@ class Course(Base):
     homeworks = relationship('Homework', back_populates='course')
     teacher = relationship('Teacher', back_populates='courses')
     exam = relationship('Exam', back_populates='course')
+    lesson = relationship('Lesson', back_populates='course')
 
 class CourseToGroup(Base):
     __tablename__ = 'course_group'
@@ -138,7 +142,6 @@ class HomeworkAnswer(Base):
     student = relationship('Student', back_populates='homework_answers')
 class Exam(Base):
     __tablename__ = 'exam'
-
     id = Column(Integer, primary_key=True, index=True)
     name=Column(String)
     exam_duration=Column(Time)
@@ -153,6 +156,7 @@ class Exam(Base):
     quiz = relationship('Quiz', back_populates='exams')
     exam_result = relationship('Exam_result', back_populates='exams')
     question = relationship('Question', back_populates='exams')
+    project = relationship('Project_exam', back_populates='exams')
 class Quiz(Base):
     __tablename__="quiz"
     id = Column(Integer, primary_key=True, index=True)
@@ -217,3 +221,78 @@ class Question_answer_Student(Base):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     question = relationship('Question', back_populates='question_answer')
     student = relationship('Student', back_populates='question_answer')
+    question_result = relationship('Question_result', back_populates='answer_student')
+class Question_result(Base):
+    __tablename__="Question_result"
+    id = Column(Integer, primary_key=True, index=True)
+    comment=Column(String)
+    answer_id = Column(Integer, ForeignKey('question_answer.id', ondelete='CASCADE'))
+    is_true=Column(Boolean,default=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    answer_student = relationship('Question_answer_Student', back_populates='question_result')
+class Project_exam(Base):
+    __tablename__="project_exam"
+    id = Column(Integer, primary_key=True, index=True)
+    comment=Column(String)
+    img=Column(String)
+    url_address=Column(String,default="")
+    exam_id = Column(Integer, ForeignKey('exam.id', ondelete='CASCADE'))
+    point=Column(Integer)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    exams = relationship('Exam', back_populates='project')
+    project_result = relationship('Project_exam_result', back_populates='project')
+class Project_exam_result(Base):
+    __tablename__="project_result"
+    id = Column(Integer, primary_key=True, index=True)
+    img=Column(String)
+    comment=Column(String)
+    url=Column(String)
+    student_id = Column(Integer, ForeignKey('students.id', ondelete='CASCADE'))
+    project_id = Column(Integer, ForeignKey('project_exam.id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    project = relationship('Project_exam', back_populates='project_result')
+    student = relationship('Student', back_populates='project')
+    result = relationship('Project_Teacher_result', back_populates='answer_student')
+class Project_Teacher_result(Base):
+    __tablename__="project_teacher_result"
+    id = Column(Integer, primary_key=True, index=True)
+    comment=Column(String)
+    answer_id = Column(Integer, ForeignKey('project_result.id', ondelete='CASCADE'))
+    is_true=Column(Boolean,default=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    answer_student = relationship('Project_exam_result', back_populates='result')
+class Lesson(Base):
+    __tablename__="lesson"
+    id = Column(Integer, primary_key=True, index=True)
+    course_id = Column(Integer, ForeignKey('courses.id', ondelete='CASCADE'))
+    name=Column(String)
+    descrition=Column(String)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    course = relationship('Course', back_populates='lesson')
+    lesson_img = relationship('Lesson_img', back_populates='lesson')
+    lesson_comments = relationship('Lesson_comment', back_populates='lesson')
+class Lesson_img(Base):
+    __tablename__="lesson_img"
+    id = Column(Integer, primary_key=True, index=True)
+    img_url=Column(String)
+    lesson_id = Column(Integer, ForeignKey('lesson.id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    lesson = relationship('Lesson', back_populates='lesson_img')
+class Lesson_comment(Base):
+    __tablename__="lesson_comment"
+    id = Column(Integer, primary_key=True, index=True)
+    comment=Column(String)
+    student_id = Column(Integer, ForeignKey('students.id', ondelete='CASCADE'))
+    teacher_id = Column(Integer, ForeignKey('teachers.id', ondelete='CASCADE'))
+    lesson_id = Column(Integer, ForeignKey('lesson.id', ondelete='CASCADE'))
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    lesson = relationship('Lesson', back_populates='lesson_comments')
+    student = relationship('Student', back_populates='lesson_comments')
+    teacher = relationship('Teacher', back_populates='lesson_comments')

@@ -89,3 +89,26 @@ class Question_update_Base(BaseModel):
 class Question_answer_student_Base(BaseModel):
     answer:str
     question_id:int
+class Question_result_Base(BaseModel):
+    comment:str
+    answer_id:int
+    is_true:bool
+class Project_exam_Base(BaseModel):
+    comment:str
+    url_address:str = ""
+    exam_id:int
+    point:int
+class Project_result_Base(BaseModel):
+    comment:str
+    url:str
+class Project_result_add(Project_result_Base):
+    # student_id:int
+    project_id:int
+class Lesson_update_base(BaseModel):
+    name:str
+    descrition:str
+class Lesson_Base(Lesson_update_base):
+    course_id:int
+class Lesson_Comment_base(BaseModel):
+    comment:str
+    lesson_id:int
