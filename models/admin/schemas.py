@@ -17,4 +17,7 @@ class Video_Base(BaseModel):
 class News_Base(BaseModel):
     title:str
     subtitle:str
-    
+class Project_Base(BaseModel):
+    url_project:str
+    name:str
+    description:str

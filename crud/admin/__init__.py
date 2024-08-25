@@ -1,2 +1,3 @@
 from crud.admin.auth_admin import create_admin_crud,admin_login,read_all_admin,read_admin,update_admin,check_admin_token,read_region_admin,read_disactive_admin,disactive_admines
 from crud.admin.tutorial_crud import create_tutorial,create_folder_crud,read_all_tutorial,read_tutorial,create_video,post_img_tutorial,delete_tutorial,create_videos,delete_video,delete_folder,update_tutorial,update_folder
+from crud.admin.project import create_project,post_img_project,read_all_project,delete_project,update_project

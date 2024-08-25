@@ -42,4 +42,15 @@ class Video(Base):
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     folder = relationship('Folder', back_populates='videos')
+class Project(Base):
+    __tablename__ = 'project'
+
+    id = Column(Integer, primary_key=True, index=True)
+    url_project=Column(String)
+    name=Column(String)
+    description=Column(String)
+    img_url=Column(String)
+
+    created_at = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 

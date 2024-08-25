@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.superadmin import authentication_router
-from routers.admin import auth_admin, tutorial
+from routers.admin import auth_admin, tutorial,project
 from routers.student import auth_student,course,homework,exam,lesson
 from routers.teacher import auth_teacher
 from db.connection import Base,engine
@@ -32,4 +32,5 @@ app.include_router(auth_student)
 app.include_router(course)
 # app.include_router(homework)
 # app.include_router(exam)
-app.include_router(lesson)
+# app.include_router(lesson)
+app.include_router(project)
